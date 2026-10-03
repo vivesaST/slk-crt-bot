@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Trading Bot · SLK + CRT</title>
+  <link rel="stylesheet" href="/static/style.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+</head>
+<body>
+  <div class="app">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-icon">T</div>
+        <div>
+          <div class="logo-text">Trading Bot</div>
+          <div class="logo-sub">SLK · Daily CRT · 4H CRT</div>
+        </div>
+      </div>
+      <div class="sidebar-footer">
+        <div class="status-pill" id="statusPill">
+          <span class="dot" id="statusDot"></span>
+          <span id="statusText">Stopped</span>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main">
+      <header class="header">
+        <div>
+          <h1>Dashboard</h1>
+          <p class="subtitle">Toggle strategies · Start bot · Monitor activity</p>
+        </div>
+        <div class="header-actions">
+          <button id="btnStart" class="btn btn-primary" onclick="startBot()">▶ Start</button>
+          <button id="btnStop" class="btn btn-danger" onclick="stopBot()" disabled>■ Stop</button>
+        </div>
+      </header>
+
+      <section class="cards">
+        <div class="card"><div class="card-label">Status</div><div class="card-value" id="cardStatus">Stopped</div></div>
+        <div class="card"><div class="card-label">Last Scan</div><div class="card-value" id="cardLastScan">—</div></div>
+        <div class="card"><div class="card-label">Pairs</div><div class="card-value" id="cardPairs">0</div></div>
+        <div class="card"><div class="card-label">Interval</div><div class="card-value" id="cardInterval">30s</div></div>
+      </section>
+
+      <!-- Strategy toggles -->
+      <section class="panel strategies-panel">
+        <div class="panel-header"><h2>Strategies (tick to enable alerts)</h2></div>
+        <div class="toggles">
+          <label class="toggle-row">
+            <input type="checkbox" id="togSlk" onchange="saveSettings()" />
+            <div>
+              <strong>SLK</strong>
+              <span>Daily rejection at Key Level + 4H External BO</span>
+            </div>
+            <button class="btn-sm" onclick="testStrategy('slk')">Test alert</button>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="togDaily" onchange="saveSettings()" />
+            <div>
+              <strong>Daily CRT</strong>
+              <span>Alert 5 min before Daily close when setup is valid</span>
+            </div>
+            <button class="btn-sm" onclick="testStrategy('daily_crt')">Test alert</button>
+          </label>
+          <label class="toggle-row">
+            <input type="checkbox" id="togH4" onchange="saveSettings()" />
+            <div>
+              <strong>4H CRT</strong>
+              <span>Alert 5 min before C2 closes (after C1 sweep)</span>
+            </div>
+            <button class="btn-sm" onclick="testStrategy('h4_crt')">Test alert</button>
+          </label>
+        </div>
+      </section>
+
+      <div class="grid">
+        <section class="panel">
+          <div class="panel-header">
+            <h2>Activity Feed</h2>
+            <button class="btn-sm" onclick="loadActivities()">Refresh</button>
+          </div>
+          <div class="activity-list" id="activityList">
+            <div class="empty">No activity yet. Start the bot.</div>
+          </div>
+        </section>
+        <section class="panel">
+          <div class="panel-header"><h2>Monitored Pairs</h2></div>
+          <div class="pairs-list" id="pairsList"></div>
+          <div class="info-box">
+            <strong>How it works</strong>
+            <p><b>SLK</b> — Structure + Liquidity + Key Levels (A/V shape). Bias when 4H external BO aligns with Daily rejection.</p>
+            <p><b>Daily CRT</b> — Monday range, Tue/Wed sweep. Alert ~5 min before daily close.</p>
+            <p><b>4H CRT</b> — C1 range, C2 sweep. Alert ~5 min before that 4H candle closes for C3 entry.</p>
+            <p class="note">All alerts are bias only — not entry signals.</p>
+          </div>
+        </section>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    async function fetchStatus() {
+      const res = await fetch('/api/status');
+      const data = await res.json();
+      const running = data.running;
+      document.getElementById('cardStatus').textContent = running ? 'Running' : 'Stopped';
+      document.getElementById('cardLastScan').textContent = data.last_scan || '—';
+      document.getElementById('cardPairs').textContent = (data.pairs || []).length;
+      document.getElementById('cardInterval').textContent = (data.interval || 30) + 's';
+
+      const s = data.settings || {};
+      document.getElementById('togSlk').checked = !!s.slk;
+      document.getElementById('togDaily').checked = !!s.daily_crt;
+      document.getElementById('togH4').checked = !!s.h4_crt;
+
+      const pill = document.getElementById('statusPill');
+      document.getElementById('statusText').textContent = running ? 'Running' : 'Stopped';
+      pill.classList.toggle('running', running);
+      document.getElementById('btnStart').disabled = running;
+      document.getElementById('btnStop').disabled = !running;
+
+      const pl = document.getElementById('pairsList');
+      pl.innerHTML = (data.pairs || []).map(p => `<div class="pair-chip">${p.replace('_','')}</div>`).join('');
+    }
+
+    async function loadActivities() {
+      const res = await fetch('/api/activities?limit=60');
+      const acts = await res.json();
+      const el = document.getElementById('activityList');
+      if (!acts.length) {
+        el.innerHTML = '<div class="empty">No activity yet. Start the bot.</div>';
+        return;
+      }
+      el.innerHTML = acts.map(a => `
+        <div class="activity-item ${a.level || 'info'}">
+          <div class="activity-time">${a.time}${a.strategy ? ' · ' + a.strategy : ''}</div>
+          <div class="activity-msg">
+            ${a.pair ? `<span class="pair-tag">${a.pair}</span>` : ''}
+            ${a.message}
+          </div>
+        </div>
+      `).join('');
+    }
+
+    async function saveSettings() {
+      await fetch('/api/settings', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          slk: document.getElementById('togSlk').checked,
+          daily_crt: document.getElementById('togDaily').checked,
+          h4_crt: document.getElementById('togH4').checked,
+        }),
+      });
+    }
+
+    async function startBot() {
+      const r = await fetch('/api/start', {method: 'POST'});
+      const d = await r.json();
+      alert(d.message);
+      fetchStatus(); loadActivities();
+    }
+
+    async function stopBot() {
+      const r = await fetch('/api/stop', {method: 'POST'});
+      const d = await r.json();
+      alert(d.message);
+      fetchStatus(); loadActivities();
+    }
+
+    async function testStrategy(name) {
+      const r = await fetch('/api/test/' + name, {method: 'POST'});
+      const d = await r.json();
+      alert(d.message);
+    }
+
+    fetchStatus(); loadActivities();
+    setInterval(fetchStatus, 8000);
+    setInterval(loadActivities, 12000);
+  </script>
+</body>
+</html>
