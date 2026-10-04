@@ -48,7 +48,7 @@ ALERT_COOLDOWN_MINUTES = 120
 
 # ====================== GENERAL ======================
 SECRET_KEY = os.getenv("SECRET_KEY", "trading-bot-secret-change-me")
-CHECK_INTERVAL_SECONDS = 30  # check often so 5-min CRT window is caught
+CHECK_INTERVAL_SECONDS = 14400  # 4 hours
 ACTIVITY_FILE = "data/activity.json"
 SETTINGS_FILE = "data/settings.json"
 MAX_ACTIVITY_ENTRIES = 120

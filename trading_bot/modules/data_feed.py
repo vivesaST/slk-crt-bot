@@ -1,6 +1,6 @@
 """OANDA v20 candles — indexed in America/New_York"""
 import logging
-from typing import Optional
+from typing import Optional, Tuple
 
 import requests
 import pandas as pd
@@ -50,6 +50,16 @@ def fetch_ohlcv(symbol: str, timeframe: str = "H4", limit: int = 100) -> Optiona
 
 def get_daily_and_4h(symbol: str):
     return (
-        fetch_ohlcv(symbol, "D", config.CANDLE_LIMIT_DAILY),
-        fetch_ohlcv(symbol, "H4", config.CANDLE_LIMIT_4H),
+        fetch_ohlcv(symbol, "D", getattr(config, "CANDLE_LIMIT_DAILY", 80)),
+        fetch_ohlcv(symbol, "H4", getattr(config, "CANDLE_LIMIT_4H", 120)),
     )
+
+
+def get_mtf_frames(symbol: str) -> dict:
+    """Monthly / Weekly / Daily / 4H for multi-TF SLK."""
+    return {
+        "M": fetch_ohlcv(symbol, "M", 40),
+        "W": fetch_ohlcv(symbol, "W", 60),
+        "D": fetch_ohlcv(symbol, "D", getattr(config, "CANDLE_LIMIT_DAILY", 80)),
+        "H4": fetch_ohlcv(symbol, "H4", getattr(config, "CANDLE_LIMIT_4H", 120)),
+    }

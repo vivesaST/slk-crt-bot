@@ -56,3 +56,21 @@ def test_alert_h4_crt() -> bool:
         "If you see this, 4H CRT alerts are working."
     )
     return TelegramAlerter().send(msg)
+
+
+def test_alert_monthly_slk() -> bool:
+    msg = (
+        "🧪 TEST · MONTHLY SLK\n\n"
+        "Monthly reject/sweep → Weekly BO.\n"
+        "If you see this, Monthly SLK alerts are working."
+    )
+    return TelegramAlerter().send(msg)
+
+
+def test_alert_weekly_slk() -> bool:
+    msg = (
+        "🧪 TEST · WEEKLY SLK\n\n"
+        "Weekly reject/sweep → Daily BO.\n"
+        "If you see this, Weekly SLK alerts are working."
+    )
+    return TelegramAlerter().send(msg)

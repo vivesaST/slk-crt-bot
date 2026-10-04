@@ -3,145 +3,337 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Trading Bot · SLK + CRT</title>
+  <title>SLK · FOREX INTELLIGENCE</title>
   <link rel="stylesheet" href="/static/style.css" />
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
+  <script src="https://unpkg.com/lucide@latest"></script>
 </head>
 <body>
   <div class="app">
-    <aside class="sidebar">
-      <div class="logo">
-        <div class="logo-icon">T</div>
-        <div>
-          <div class="logo-text">Trading Bot</div>
-          <div class="logo-sub">SLK · Daily CRT · 4H CRT</div>
+    <!-- SIDEBAR -->
+    <aside class="sidebar" id="sidebar">
+      <div class="brand">
+        <div class="brand-mark">SLK</div>
+        <div class="brand-text">
+          <div class="brand-name">SLK</div>
+          <div class="brand-sub">FOREX INTELLIGENCE</div>
         </div>
       </div>
-      <div class="sidebar-footer">
+      <p class="brand-tagline">TRADE SMARTER. NOT HARDER.</p>
+
+      <nav class="nav">
+        <div class="nav-section">OVERVIEW</div>
+        <a href="#top" class="nav-item active"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+
+        <div class="nav-section">SIGNALS</div>
+        <a href="#signals" class="nav-item"><i data-lucide="radio"></i> Live Signals</a>
+        <a href="#activity" class="nav-item"><i data-lucide="history"></i> Signal History</a>
+
+        <div class="nav-section">ANALYSIS</div>
+        <a href="#strategies" class="nav-item"><i data-lucide="cpu"></i> Strategies</a>
+        <a href="#pairs" class="nav-item"><i data-lucide="line-chart"></i> Monitored Pairs</a>
+
+        <div class="nav-section">SYSTEM</div>
+        <a href="#activity" class="nav-item"><i data-lucide="activity"></i> Activity</a>
+        <a href="#strategies" class="nav-item"><i data-lucide="settings"></i> Settings</a>
+      </nav>
+
+      <div class="sidebar-foot">
         <div class="status-pill" id="statusPill">
           <span class="dot" id="statusDot"></span>
           <span id="statusText">Stopped</span>
         </div>
+        <div class="version">v1.0.0</div>
       </div>
     </aside>
 
-    <main class="main">
-      <header class="header">
-        <div>
-          <h1>Dashboard</h1>
-          <p class="subtitle">Toggle strategies · Start bot · Monitor activity</p>
+    <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+    <!-- MAIN -->
+    <main class="main" id="top">
+      <header class="topbar">
+        <button type="button" class="menu-btn" onclick="toggleSidebar()" aria-label="Menu">
+          <i data-lucide="menu"></i>
+        </button>
+        <div class="greeting">
+          <h1 id="greetingTitle">Good day, Trader</h1>
+          <p class="subtitle">Monitor market structure, liquidity and strategy confirmations.</p>
         </div>
-        <div class="header-actions">
-          <button id="btnStart" class="btn btn-primary" onclick="startBot()">▶ Start</button>
-          <button id="btnStop" class="btn btn-danger" onclick="stopBot()" disabled>■ Stop</button>
+        <div class="topbar-actions">
+          <div class="live-badge" id="liveBadge"><span class="dot"></span> <span id="liveLabel">OFFLINE</span></div>
+          <button id="btnStart" class="btn btn-gold" onclick="startBot()">Start Bot</button>
+          <button id="btnStop" class="btn btn-ghost" onclick="stopBot()" disabled>Stop Bot</button>
         </div>
       </header>
 
-      <section class="cards">
-        <div class="card"><div class="card-label">Status</div><div class="card-value" id="cardStatus">Stopped</div></div>
-        <div class="card"><div class="card-label">Last Scan</div><div class="card-value" id="cardLastScan">—</div></div>
-        <div class="card"><div class="card-label">Pairs</div><div class="card-value" id="cardPairs">0</div></div>
-        <div class="card"><div class="card-label">Interval</div><div class="card-value" id="cardInterval">30s</div></div>
-      </section>
-
-      <!-- Strategy toggles -->
-      <section class="panel strategies-panel">
-        <div class="panel-header"><h2>Strategies (tick to enable alerts)</h2></div>
-        <div class="toggles">
-          <label class="toggle-row">
-            <input type="checkbox" id="togSlk" onchange="saveSettings()" />
-            <div>
-              <strong>SLK</strong>
-              <span>Daily rejection at Key Level + 4H External BO</span>
-            </div>
-            <button class="btn-sm" onclick="testStrategy('slk')">Test alert</button>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" id="togDaily" onchange="saveSettings()" />
-            <div>
-              <strong>Daily CRT</strong>
-              <span>Alert 5 min before Daily close when setup is valid</span>
-            </div>
-            <button class="btn-sm" onclick="testStrategy('daily_crt')">Test alert</button>
-          </label>
-          <label class="toggle-row">
-            <input type="checkbox" id="togH4" onchange="saveSettings()" />
-            <div>
-              <strong>4H CRT</strong>
-              <span>Alert 5 min before C2 closes (after C1 sweep)</span>
-            </div>
-            <button class="btn-sm" onclick="testStrategy('h4_crt')">Test alert</button>
-          </label>
+      <!-- Metrics -->
+      <section class="metrics">
+        <div class="metric-card">
+          <div class="metric-label">SYSTEM STATUS</div>
+          <div class="metric-value" id="cardStatus">Stopped</div>
+          <div class="metric-hint" id="statusHint">Bot idle</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">MARKETS SCANNED</div>
+          <div class="metric-value" id="cardPairs">0</div>
+          <div class="metric-hint">Pairs monitored</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">SIGNALS TODAY</div>
+          <div class="metric-value" id="cardSignals">—</div>
+          <div class="metric-hint">From activity log</div>
+        </div>
+        <div class="metric-card">
+          <div class="metric-label">LAST SCAN</div>
+          <div class="metric-value metric-value-sm" id="cardLastScan">—</div>
+          <div class="metric-hint" id="cardInterval">Interval 4h</div>
         </div>
       </section>
 
-      <div class="grid">
-        <section class="panel">
-          <div class="panel-header">
-            <h2>Activity Feed</h2>
-            <button class="btn-sm" onclick="loadActivities()">Refresh</button>
-          </div>
-          <div class="activity-list" id="activityList">
-            <div class="empty">No activity yet. Start the bot.</div>
-          </div>
-        </section>
-        <section class="panel">
-          <div class="panel-header"><h2>Monitored Pairs</h2></div>
-          <div class="pairs-list" id="pairsList"></div>
-          <div class="info-box">
-            <strong>How it works</strong>
-            <p><b>SLK</b> — Structure + Liquidity + Key Levels (A/V shape). Bias when 4H external BO aligns with Daily rejection.</p>
-            <p><b>Daily CRT</b> — Monday range, Tue/Wed sweep. Alert ~5 min before daily close.</p>
-            <p><b>4H CRT</b> — C1 range, C2 sweep. Alert ~5 min before that 4H candle closes for C3 entry.</p>
-            <p class="note">All alerts are bias only — not entry signals.</p>
-          </div>
-        </section>
+      <div class="grid-2">
+        <!-- LEFT: Activity / Signals -->
+        <div class="col">
+          <section class="panel" id="signals">
+            <div class="panel-head">
+              <div>
+                <h2>MARKET ACTIVITY</h2>
+                <p class="panel-sub">Live monitoring across your selected instruments.</p>
+              </div>
+              <button type="button" class="btn-sm" onclick="loadActivities()">Refresh</button>
+            </div>
+            <div class="panel-body">
+              <h3 class="section-title">RECENT SIGNALS</h3>
+              <div id="signalsList" class="signals-list">
+                <div class="empty-state">No confirmed signals yet.</div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" id="activity">
+            <div class="panel-head">
+              <div>
+                <h2>SYSTEM ACTIVITY</h2>
+                <p class="panel-sub">Engine events and scan timeline.</p>
+              </div>
+            </div>
+            <div class="activity-list" id="activityList">
+              <div class="empty-state">No activity yet. Start the bot.</div>
+            </div>
+          </section>
+        </div>
+
+        <!-- RIGHT: Strategies + Pairs -->
+        <div class="col">
+          <section class="panel" id="strategies">
+            <div class="panel-head">
+              <div>
+                <h2>STRATEGY ENGINE</h2>
+                <p class="panel-sub">Enable the models you want alerts from.</p>
+              </div>
+            </div>
+            <div class="strategy-cards">
+              <div class="strategy-card">
+                <div class="strategy-top">
+                  <div>
+                    <div class="strategy-name">SLK</div>
+                    <div class="strategy-desc">Structure + Liquidity + Key Levels</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="togSlk" onchange="saveSettings()" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="strategy-foot">
+                  <span class="strategy-status" id="stSlk">OFF</span>
+                  <button type="button" class="btn-sm" onclick="testStrategy('slk')">Test Alert</button>
+                </div>
+              </div>
+              <div class="strategy-card">
+                <div class="strategy-top">
+                  <div>
+                    <div class="strategy-name">Daily CRT</div>
+                    <div class="strategy-desc">Daily range manipulation</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="togDaily" onchange="saveSettings()" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="strategy-foot">
+                  <span class="strategy-status" id="stDaily">OFF</span>
+                  <button type="button" class="btn-sm" onclick="testStrategy('daily_crt')">Test Alert</button>
+                </div>
+              </div>
+              <div class="strategy-card">
+                <div class="strategy-top">
+                  <div>
+                    <div class="strategy-name">4H CRT</div>
+                    <div class="strategy-desc">C1 → C2 → C3 structure</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="togH4" onchange="saveSettings()" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="strategy-foot">
+                  <span class="strategy-status" id="stH4">OFF</span>
+                  <button type="button" class="btn-sm" onclick="testStrategy('h4_crt')">Test Alert</button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="panel" id="pairs">
+            <div class="panel-head">
+              <div>
+                <h2>MONITORED MARKETS</h2>
+                <p class="panel-sub">Add or remove pairs to scan.</p>
+              </div>
+            </div>
+            <div class="pair-add">
+              <input type="text" id="newPair" placeholder="EUR_USD or GBPJPY" />
+              <button type="button" class="btn btn-gold" onclick="addPair()">Add</button>
+            </div>
+            <div class="pairs-list" id="pairsList"></div>
+          </section>
+        </div>
       </div>
     </main>
   </div>
 
+  <div id="toast" class="toast" hidden></div>
+
   <script>
+    function toggleSidebar() {
+      document.getElementById('sidebar').classList.toggle('open');
+      document.getElementById('sidebarOverlay').classList.toggle('show');
+    }
+
+    function setGreeting() {
+      const h = new Date().getHours();
+      let g = 'Good day';
+      if (h < 12) g = 'Good morning';
+      else if (h < 17) g = 'Good afternoon';
+      else g = 'Good evening';
+      document.getElementById('greetingTitle').textContent = g + ', Trader';
+    }
+
+    function toast(msg, ok) {
+      const el = document.getElementById('toast');
+      el.textContent = msg;
+      el.className = 'toast ' + (ok ? 'ok' : 'err');
+      el.hidden = false;
+      setTimeout(() => { el.hidden = true; }, 3200);
+    }
+
     async function fetchStatus() {
-      const res = await fetch('/api/status');
-      const data = await res.json();
-      const running = data.running;
-      document.getElementById('cardStatus').textContent = running ? 'Running' : 'Stopped';
-      document.getElementById('cardLastScan').textContent = data.last_scan || '—';
-      document.getElementById('cardPairs').textContent = (data.pairs || []).length;
-      document.getElementById('cardInterval').textContent = (data.interval || 30) + 's';
+      try {
+        const res = await fetch('/api/status');
+        const data = await res.json();
+        const running = data.running;
 
-      const s = data.settings || {};
-      document.getElementById('togSlk').checked = !!s.slk;
-      document.getElementById('togDaily').checked = !!s.daily_crt;
-      document.getElementById('togH4').checked = !!s.h4_crt;
+        document.getElementById('cardStatus').textContent = running ? 'ONLINE' : 'STOPPED';
+        document.getElementById('statusHint').textContent = running ? 'Engine running' : 'Bot idle';
+        document.getElementById('cardLastScan').textContent = data.last_scan || '—';
+        document.getElementById('cardPairs').textContent = (data.pairs || []).length;
+        document.getElementById('cardInterval').textContent = 'Interval ' + (data.interval_label || '4h');
 
-      const pill = document.getElementById('statusPill');
-      document.getElementById('statusText').textContent = running ? 'Running' : 'Stopped';
-      pill.classList.toggle('running', running);
-      document.getElementById('btnStart').disabled = running;
-      document.getElementById('btnStop').disabled = !running;
+        const s = data.settings || {};
+        document.getElementById('togSlk').checked = !!s.slk;
+        document.getElementById('togDaily').checked = !!s.daily_crt;
+        document.getElementById('togH4').checked = !!s.h4_crt;
+        document.getElementById('stSlk').textContent = s.slk ? 'ON' : 'OFF';
+        document.getElementById('stDaily').textContent = s.daily_crt ? 'ON' : 'OFF';
+        document.getElementById('stH4').textContent = s.h4_crt ? 'ON' : 'OFF';
+        document.getElementById('stSlk').className = 'strategy-status' + (s.slk ? ' on' : '');
+        document.getElementById('stDaily').className = 'strategy-status' + (s.daily_crt ? ' on' : '');
+        document.getElementById('stH4').className = 'strategy-status' + (s.h4_crt ? ' on' : '');
 
+        document.getElementById('statusText').textContent = running ? 'SYSTEM ONLINE' : 'SYSTEM OFFLINE';
+        document.getElementById('statusPill').classList.toggle('running', running);
+        document.getElementById('liveLabel').textContent = running ? 'LIVE' : 'OFFLINE';
+        document.getElementById('liveBadge').classList.toggle('live', running);
+        document.getElementById('btnStart').disabled = running;
+        document.getElementById('btnStop').disabled = !running;
+
+        renderPairs(data.pairs || []);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
+    function renderPairs(pairs) {
       const pl = document.getElementById('pairsList');
-      pl.innerHTML = (data.pairs || []).map(p => `<div class="pair-chip">${p.replace('_','')}</div>`).join('');
+      if (!pairs.length) {
+        pl.innerHTML = '<div class="empty-state">No pairs. Add one above.</div>';
+        return;
+      }
+      pl.innerHTML = pairs.map(p => `
+        <div class="pair-chip">
+          <span>${String(p).replace(/_/g, '')}</span>
+          <button type="button" class="pair-x" onclick="removePair('${p}')" title="Remove">×</button>
+        </div>
+      `).join('');
     }
 
     async function loadActivities() {
-      const res = await fetch('/api/activities?limit=60');
-      const acts = await res.json();
-      const el = document.getElementById('activityList');
-      if (!acts.length) {
-        el.innerHTML = '<div class="empty">No activity yet. Start the bot.</div>';
-        return;
+      try {
+        const res = await fetch('/api/activities?limit=60');
+        const acts = await res.json();
+        const el = document.getElementById('activityList');
+        const sigEl = document.getElementById('signalsList');
+
+        const today = new Date().toISOString().slice(0, 10);
+        const alerts = (acts || []).filter(a => a.level === 'alert' || (a.strategy && a.message && /SIGNAL|SLK|CRT|BUY|SELL/i.test(a.message)));
+        const todayCount = alerts.filter(a => (a.time || '').startsWith(today.replace(/-/g, '-')) || (a.time || '').includes(today.slice(5))).length;
+        // Prefer counting level===alert
+        const alertOnly = (acts || []).filter(a => a.level === 'alert');
+        document.getElementById('cardSignals').textContent = alertOnly.length ? String(alertOnly.filter(a => {
+          const t = a.time || '';
+          return t.startsWith(today) || t.indexOf(today.slice(8)) >= 0;
+        }).length || alertOnly.length) : '—';
+
+        if (!acts || !acts.length) {
+          el.innerHTML = '<div class="empty-state">No activity yet. Start the bot.</div>';
+          sigEl.innerHTML = '<div class="empty-state">No confirmed signals yet.</div>';
+          return;
+        }
+
+        el.innerHTML = acts.map(a => {
+          const lvl = a.level || 'info';
+          return `
+            <div class="event ${lvl}">
+              <div class="event-dot"></div>
+              <div class="event-body">
+                <div class="event-meta">${a.time || ''}${a.strategy ? ' · ' + a.strategy : ''}</div>
+                <div class="event-msg">${a.pair ? '<span class="tag">' + a.pair + '</span> ' : ''}${escapeHtml(a.message || '')}</div>
+              </div>
+            </div>`;
+        }).join('');
+
+        const signalActs = acts.filter(a => a.level === 'alert');
+        if (!signalActs.length) {
+          sigEl.innerHTML = '<div class="empty-state">No confirmed signals yet.</div>';
+        } else {
+          sigEl.innerHTML = signalActs.slice(0, 12).map(a => `
+            <div class="signal-card">
+              <div class="signal-top">
+                <span class="signal-pair">${a.pair || '—'}</span>
+                <span class="signal-strat">${a.strategy || 'SIGNAL'}</span>
+              </div>
+              <div class="signal-msg">${escapeHtml(a.message || '')}</div>
+              <div class="signal-time">${a.time || ''}</div>
+              <div class="signal-disclaimer">BIAS ONLY · NOT AN ENTRY SIGNAL</div>
+            </div>
+          `).join('');
+        }
+      } catch (e) {
+        console.error(e);
       }
-      el.innerHTML = acts.map(a => `
-        <div class="activity-item ${a.level || 'info'}">
-          <div class="activity-time">${a.time}${a.strategy ? ' · ' + a.strategy : ''}</div>
-          <div class="activity-msg">
-            ${a.pair ? `<span class="pair-tag">${a.pair}</span>` : ''}
-            ${a.message}
-          </div>
-        </div>
-      `).join('');
+    }
+
+    function escapeHtml(s) {
+      return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
     }
 
     async function saveSettings() {
@@ -154,31 +346,64 @@
           h4_crt: document.getElementById('togH4').checked,
         }),
       });
+      fetchStatus();
+    }
+
+    async function addPair() {
+      const input = document.getElementById('newPair');
+      const pair = input.value.trim();
+      if (!pair) return toast('Enter a pair', false);
+      const r = await fetch('/api/pairs', {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ pair }),
+      });
+      const d = await r.json();
+      toast(d.message, d.success);
+      if (d.success) { input.value = ''; fetchStatus(); }
+    }
+
+    async function removePair(pair) {
+      const r = await fetch('/api/pairs', {
+        method: 'DELETE',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({ pair }),
+      });
+      const d = await r.json();
+      toast(d.message, d.success);
+      fetchStatus();
     }
 
     async function startBot() {
-      const r = await fetch('/api/start', {method: 'POST'});
+      const r = await fetch('/api/start', { method: 'POST' });
       const d = await r.json();
-      alert(d.message);
+      toast(d.message, d.success);
       fetchStatus(); loadActivities();
     }
 
     async function stopBot() {
-      const r = await fetch('/api/stop', {method: 'POST'});
+      const r = await fetch('/api/stop', { method: 'POST' });
       const d = await r.json();
-      alert(d.message);
+      toast(d.message, d.success);
       fetchStatus(); loadActivities();
     }
 
     async function testStrategy(name) {
-      const r = await fetch('/api/test/' + name, {method: 'POST'});
+      const r = await fetch('/api/test/' + name, { method: 'POST' });
       const d = await r.json();
-      alert(d.message);
+      toast(d.message, d.success);
     }
 
-    fetchStatus(); loadActivities();
+    document.getElementById('newPair').addEventListener('keydown', e => {
+      if (e.key === 'Enter') addPair();
+    });
+
+    setGreeting();
+    fetchStatus();
+    loadActivities();
     setInterval(fetchStatus, 8000);
     setInterval(loadActivities, 12000);
+    if (window.lucide) lucide.createIcons();
   </script>
 </body>
 </html>
