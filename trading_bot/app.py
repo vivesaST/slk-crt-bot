@@ -67,6 +67,16 @@ def api_pairs():
     return jsonify(runner.remove_pair(pair))
 
 
+@app.route("/api/scan", methods=["POST"])
+def api_scan_all():
+    return jsonify(runner.scan_all_now())
+
+
+@app.route("/api/scan/<path:pair>", methods=["POST"])
+def api_scan_pair(pair):
+    return jsonify(runner.scan_pair_now(pair))
+
+
 @app.route("/api/test/<strategy>", methods=["POST"])
 def api_test(strategy):
     strategy = strategy.lower()

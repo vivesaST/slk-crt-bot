@@ -58,6 +58,11 @@ class BotRunner:
         self.settings = s
 
     def get_pairs(self) -> List[str]:
+        # Always reload so dashboard add/remove is visible to the scanner thread
+        try:
+            self.settings = self._load_settings()
+        except Exception:
+            pass
         return list(self.settings.get("pairs") or config.PAIRS)
 
     def update_settings(self, slk=None, daily_crt=None, h4_crt=None, monthly_slk=None, weekly_slk=None):
@@ -76,6 +81,8 @@ class BotRunner:
 
     def add_pair(self, pair: str) -> dict:
         pair = oanda_symbol(pair.strip())
+        if not pair or "_" not in pair:
+            return {"success": False, "message": f"Invalid pair format: {pair}", "pairs": self.get_pairs()}
         s = self._load_settings()
         pairs = list(s.get("pairs") or [])
         if pair in pairs:
@@ -83,7 +90,16 @@ class BotRunner:
         pairs.append(pair)
         s["pairs"] = pairs
         self._save_settings(s)
-        return {"success": True, "message": f"Added {pair}", "pairs": pairs}
+        self._log(f"Pair added: {pair}", "success", pair)
+        # Immediate scan so it does not wait for the next 4h cycle
+        if self.is_running:
+            try:
+                self._log(f"Scanning new pair {pair} now…", "scan", pair)
+                self._process_pair(pair)
+            except Exception as e:
+                self._log(f"Scan error on new pair {pair}: {e}", "error", pair)
+                logger.exception("add_pair scan %s", pair)
+        return {"success": True, "message": f"Added {pair} (scanned)" if self.is_running else f"Added {pair}", "pairs": pairs}
 
     def remove_pair(self, pair: str) -> dict:
         pair = oanda_symbol(pair.strip())
@@ -181,6 +197,28 @@ class BotRunner:
                 time.sleep(1)
         self.is_running = False
         self._log("Bot stopped", "warning")
+
+    def scan_pair_now(self, pair: str) -> dict:
+        pair = oanda_symbol(pair.strip())
+        try:
+            self._process_pair(pair)
+            return {"success": True, "message": f"Scanned {pair}"}
+        except Exception as e:
+            logger.exception(pair)
+            return {"success": False, "message": str(e)}
+
+    def scan_all_now(self) -> dict:
+        """Force one full pass without waiting for the 4h timer."""
+        pairs = self.get_pairs()
+        self._log(f"Manual full scan · {len(pairs)} pairs", "scan")
+        errors = []
+        for pair in pairs:
+            try:
+                self._process_pair(pair)
+            except Exception as e:
+                errors.append(f"{pair}: {e}")
+                logger.exception(pair)
+        return {"success": True, "message": f"Scanned {len(pairs)} pairs", "errors": errors}
 
     def start(self) -> bool:
         if self.is_running:

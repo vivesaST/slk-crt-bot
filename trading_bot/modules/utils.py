@@ -28,16 +28,33 @@ def format_dt(dt: datetime) -> str:
 
 
 def oanda_symbol(pair: str) -> str:
-    p = pair.replace("/", "_").replace("-", "_").upper()
-    if "_" not in p and len(p) == 6:
-        p = p[:3] + "_" + p[3:]
+    p = pair.replace("/", "_").replace("-", "_").replace(" ", "").upper()
+    # strip common suffixes
+    for sfx in ("=X", ".FX", ".FOREX"):
+        if p.endswith(sfx):
+            p = p[: -len(sfx)]
+    if "_" not in p:
+        if len(p) == 6:
+            p = p[:3] + "_" + p[3:]
+        elif p in ("XAUUSD", "GOLD"):
+            p = "XAU_USD"
+        elif p in ("XAGUSD", "SILVER"):
+            p = "XAG_USD"
     mapping = {
         "XAUUSD": "XAU_USD",
         "XAGUSD": "XAG_USD",
+        "GOLD": "XAU_USD",
+        "SILVER": "XAG_USD",
         "US30": "US30_USD",
+        "NAS100": "NAS100_USD",
+        "SPX500": "SPX500_USD",
         "USOIL": "WTICO_USD",
+        "BCOUSD": "BCO_USD",
     }
-    return mapping.get(p.replace("_", ""), p)
+    key = p.replace("_", "")
+    if key in mapping:
+        return mapping[key]
+    return p
 
 
 def display_symbol(pair: str) -> str:
