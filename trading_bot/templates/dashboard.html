@@ -128,15 +128,15 @@
             <div class="panel-head">
               <div>
                 <h2>STRATEGY ENGINE</h2>
-                <p class="panel-sub">Enable the models you want alerts from.</p>
+                <p class="panel-sub">Toggle each SLK timeframe and CRT model independently. OFF = not scanned.</p>
               </div>
             </div>
             <div class="strategy-cards">
               <div class="strategy-card">
                 <div class="strategy-top">
                   <div>
-                    <div class="strategy-name">SLK</div>
-                    <div class="strategy-desc">Structure + Liquidity + Key Levels</div>
+                    <div class="strategy-name">SLK Daily</div>
+                    <div class="strategy-desc">D1 rejection → H4 external BO</div>
                   </div>
                   <label class="switch">
                     <input type="checkbox" id="togSlk" onchange="saveSettings()" />
@@ -180,6 +180,39 @@
                   <button type="button" class="btn-sm" onclick="testStrategy('h4_crt')">Test Alert</button>
                 </div>
               </div>
+              <div class="strategy-card">
+                <div class="strategy-top">
+                  <div>
+                    <div class="strategy-name">SLK Monthly</div>
+                    <div class="strategy-desc">MN rejection → W external BO</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="togMonthly" onchange="saveSettings()" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="strategy-foot">
+                  <span class="strategy-status" id="stMonthly">OFF</span>
+                  <button type="button" class="btn-sm" onclick="testStrategy('monthly_slk')">Test Alert</button>
+                </div>
+              </div>
+              <div class="strategy-card">
+                <div class="strategy-top">
+                  <div>
+                    <div class="strategy-name">SLK Weekly</div>
+                    <div class="strategy-desc">W rejection → D1 external BO</div>
+                  </div>
+                  <label class="switch">
+                    <input type="checkbox" id="togWeekly" onchange="saveSettings()" />
+                    <span class="slider"></span>
+                  </label>
+                </div>
+                <div class="strategy-foot">
+                  <span class="strategy-status" id="stWeekly">OFF</span>
+                  <button type="button" class="btn-sm" onclick="testStrategy('weekly_slk')">Test Alert</button>
+                </div>
+              </div>
+
             </div>
           </section>
 
@@ -242,12 +275,18 @@
         document.getElementById('togSlk').checked = !!s.slk;
         document.getElementById('togDaily').checked = !!s.daily_crt;
         document.getElementById('togH4').checked = !!s.h4_crt;
+        document.getElementById('togMonthly').checked = !!s.monthly_slk;
+        document.getElementById('togWeekly').checked = !!s.weekly_slk;
         document.getElementById('stSlk').textContent = s.slk ? 'ON' : 'OFF';
         document.getElementById('stDaily').textContent = s.daily_crt ? 'ON' : 'OFF';
         document.getElementById('stH4').textContent = s.h4_crt ? 'ON' : 'OFF';
+        document.getElementById('stMonthly').textContent = s.monthly_slk ? 'ON' : 'OFF';
+        document.getElementById('stWeekly').textContent = s.weekly_slk ? 'ON' : 'OFF';
         document.getElementById('stSlk').className = 'strategy-status' + (s.slk ? ' on' : '');
         document.getElementById('stDaily').className = 'strategy-status' + (s.daily_crt ? ' on' : '');
         document.getElementById('stH4').className = 'strategy-status' + (s.h4_crt ? ' on' : '');
+        document.getElementById('stMonthly').className = 'strategy-status' + (s.monthly_slk ? ' on' : '');
+        document.getElementById('stWeekly').className = 'strategy-status' + (s.weekly_slk ? ' on' : '');
 
         document.getElementById('statusText').textContent = running ? 'SYSTEM ONLINE' : 'SYSTEM OFFLINE';
         document.getElementById('statusPill').classList.toggle('running', running);
@@ -344,6 +383,8 @@
           slk: document.getElementById('togSlk').checked,
           daily_crt: document.getElementById('togDaily').checked,
           h4_crt: document.getElementById('togH4').checked,
+          monthly_slk: document.getElementById('togMonthly').checked,
+          weekly_slk: document.getElementById('togWeekly').checked,
         }),
       });
       fetchStatus();

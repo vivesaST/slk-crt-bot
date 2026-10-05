@@ -143,8 +143,24 @@ class BotRunner:
         return (now_ny() - last) > timedelta(minutes=config.ALERT_COOLDOWN_MINUTES)
 
     def _process_pair(self, pair: str):
+        # Reload so dashboard TF toggles apply without restart
+        try:
+            self.settings = self._load_settings()
+        except Exception:
+            pass
         s = self.settings
-        self._log(f"Scanning {pair}", "scan", pair)
+        enabled = []
+        if s.get("slk", True):
+            enabled.append("SLK-D")
+        if s.get("weekly_slk", True):
+            enabled.append("SLK-W")
+        if s.get("monthly_slk", True):
+            enabled.append("SLK-MN")
+        if s.get("daily_crt", True):
+            enabled.append("CRT-D")
+        if s.get("h4_crt", True):
+            enabled.append("CRT-H4")
+        self._log(f"Scanning {pair} [{', '.join(enabled) or 'none'}]", "scan", pair)
         frames = get_mtf_frames(pair)
         if all(v is None for v in frames.values()):
             self._log(f"No data for {pair}", "warning", pair)
@@ -180,7 +196,17 @@ class BotRunner:
         while not self._stop.is_set():
             self.last_scan = now_ny().strftime("%Y-%m-%d %H:%M:%S NY")
             pairs = self.get_pairs()
-            self._log(f"Full scan @ {self.last_scan} · {len(pairs)} pairs", "scan")
+            s = self.settings
+            tf = []
+            if s.get("slk", True): tf.append("D→H4")
+            if s.get("weekly_slk", True): tf.append("W→D")
+            if s.get("monthly_slk", True): tf.append("MN→W")
+            if s.get("daily_crt", True): tf.append("CRT-D")
+            if s.get("h4_crt", True): tf.append("CRT-H4")
+            self._log(
+                f"Full scan @ {self.last_scan} · {len(pairs)} pairs · TF: {', '.join(tf) or 'none'}",
+                "scan",
+            )
             for pair in pairs:
                 if self._stop.is_set():
                     break
